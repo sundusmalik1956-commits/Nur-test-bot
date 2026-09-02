@@ -8,13 +8,14 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")
 
-app_fastapi = FastAPI()
+# تم تغيير اسم المتغير إلى app حصرياً ليتوافق مع راندر بدون أخطاء
+app = FastAPI()
 telegram_app = Application.builder().token(TELEGRAM_BOT_TOKEN).updater(None).build()
 
 # تخزين جلسات المستخدمين
 user_sessions = {}
 
-# النماذج الثابتة باختيار من متعدد بالكامل وتضمين الروابط المباشرة
+# النماذج الثابتة باختيار من متعدد بالكامل وتضمين الروابط المباشرة لجوجل درايف
 TEST_MODELS = [
     {
         "id": 1,
@@ -126,14 +127,14 @@ TEST_MODELS = [
     }
 ]
 
-@app_fastapi.on_event("startup")
+@app.on_event("startup")
 async def startup_event():
     await telegram_app.initialize()
     if RENDER_EXTERNAL_URL:
         webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
         await telegram_app.bot.set_webhook(url=webhook_url)
 
-@app_fastapi.post("/webhook")
+@app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
     update = Update.de_json(data, telegram_app.bot)
@@ -245,6 +246,6 @@ telegram_app.add_handler(CommandHandler("start", start_command))
 telegram_app.add_handler(CallbackQueryHandler(start_test_callback, pattern="^start_test$"))
 telegram_app.add_handler(CallbackQueryHandler(answer_callback, pattern="^ans_"))
 
-@app_fastapi.get("/")
+@app.get("/")
 def home():
     return {"status": "Arabic Level Assessment Bot with Fixed Links is running!"}
