@@ -16,92 +16,110 @@ UI_TEXTS = {
     "ar": {
         "welcome": "أهلاً بك في منصة اختبارات تحديد المستوى للغة العربية.\nالرجاء اختيار لغة الواجهة والتعليمات:",
         "start_btn": "بدء الاختبار",
+        "audio_intro": "🎧 وصلْتَ إلى قسم الاستماع الأخير. استمع للملف الصوتي أولاً ثم اضغط على الزر أدناه للإجابة:",
+        "answer_btn": "الإجابة على السؤال",
         "question_title": "سؤال",
         "finished": "لقد أنهيت الاختبار بنجاح!",
         "score_label": "درجتك النهائية",
         "level_label": "مستواك اللغوي المحدد",
-        "restart": "لإعادة الاختبار من جديد، اضغط على امر البدء",
-        "session_expired": "انتهت الجلسة. الرجاء البدء مجدداً"
+        "restart": "لإعادة الاختبار من جديد، اضغط على امر البدء /start",
+        "session_expired": "انتهت الجلسة. الرجاء البدء مجدداً بـ /start"
     },
     "tr": {
         "welcome": "Arapça seviye tespiti test platformuna hoş geldiniz.\nLütfen arayüz ve talimat dilini seçin:",
         "start_btn": "Testi Başlat",
+        "audio_intro": "🎧 Dinleme bölümüne geldiniz. Önce ses dosyasını dinleyin, ardından soruyu yanıtlamak için aşağıdaki düğmeye tıklayın:",
+        "answer_btn": "Soruyu Cevapla",
         "question_title": "Soru",
         "finished": "Testi başarıyla tamamladınız!",
         "score_label": "Final puanınız",
         "level_label": "Belirlenen dil seviyeniz",
         "restart": "Testi yeniden başlatmak için /start komutunu kullanın",
-        "session_expired": "Oturum süresi doldu. Lütfen tekrar başlayın"
+        "session_expired": "Oturum süresi doldu. Lütfen /start ile tekrar başlayın"
     },
     "en": {
         "welcome": "Welcome to the Arabic language placement test platform.\nPlease choose the interface and instructions language:",
         "start_btn": "Start Test",
+        "audio_intro": "🎧 You have reached the listening section. Listen to the audio file first, then click the button below to answer:",
+        "answer_btn": "Answer Question",
         "question_title": "Question",
         "finished": "You have successfully finished the test!",
         "score_label": "Your final score",
         "level_label": "Your determined language level",
-        "restart": "To retake the test, press start",
-        "session_expired": "Session expired. Please start again"
+        "restart": "To retake the test, press /start",
+        "session_expired": "Session expired. Please start with /start"
     },
     "fr": {
         "welcome": "Bienvenue sur la plateforme de test de niveau de langue arabe.\nVeuillez choisir la langue de l'interface et des instructions:",
         "start_btn": "Commencer le test",
+        "audio_intro": "🎧 Vous êtes arrivé à la section d'écoute. Écoutez le fichier audio puis cliquez ci-dessous pour répondre :",
+        "answer_btn": "Répondre à la question",
         "question_title": "Question",
         "finished": "Vous avez terminé le test avec succès!",
         "score_label": "Votre score final",
         "level_label": "Votre niveau de langue déterminé",
-        "restart": "Pour refaire le test, appuyez sur démarrer",
-        "session_expired": "Session expirée. Veuillez recommencer"
+        "restart": "Pour refaire le test, appuyez sur /start",
+        "session_expired": "Session expirée. Veuillez recommencer avec /start"
     },
     "de": {
         "welcome": "Willkommen auf der Einstufungstest-Plattform für die arabische Sprache.\nBitte wählen Sie die Sprach- und Anweisungssprache:",
         "start_btn": "Test starten",
+        "audio_intro": "🎧 Sie haben den Hörbereich erreicht. Hören Sie sich zuerst die Audiodatei an und klicken Sie unten, um zu antworten:",
+        "answer_btn": "Frage beantworten",
         "question_title": "Frage",
         "finished": "Sie haben den Test erfolgreich beendet!",
         "score_label": "Ihre Endpunktzahl",
         "level_label": "Ihr ermitteltes Sprachniveau",
-        "restart": "Um den Test zu wiederholen, starten Sie neu",
-        "session_expired": "Sitzung abgelaufen. Bitte starten Sie neu"
+        "restart": "Um den Test zu wiederholen, tippen Sie auf /start",
+        "session_expired": "Sitzung abgelaufen. Bitte starten Sie mit /start"
     },
     "es": {
         "welcome": "Bienvenido a la plataforma de prueba de nivel de idioma árabe.\nPor favor, elija el idioma de la interfaz y las instrucciones:",
         "start_btn": "Comenzar prueba",
+        "audio_intro": "🎧 Has llegado a la sección de escucha. Escucha el archivo de audio y haz clic abajo para responder:",
+        "answer_btn": "Responder pregunta",
         "question_title": "Pregunta",
         "finished": "¡Has terminado la prueba con éxito!",
         "score_label": "Tu puntuación final",
         "level_label": "Tu nivel de idioma determinado",
-        "restart": "Para repetir la prueba, presiona iniciar",
-        "session_expired": "Sesión caducada. Por favor comienza de nuevo"
+        "restart": "Para repetir la prueba, presiona /start",
+        "session_expired": "Sesión caducada. Por favor comienza con /start"
     },
     "ru": {
         "welcome": "Добро пожаловать на платформу тестирования уровня арабского языка.\nПожалуйста, выберите язык интерфейса и инструкций:",
         "start_btn": "Начать тест",
+        "audio_intro": "🎧 Вы перешли к разделу аудирования. Прослушайте аудиофайл и нажмите кнопку ниже, чтобы ответить:",
+        "answer_btn": "Ответить на вопрос",
         "question_title": "Вопрос",
         "finished": "Вы успешно завершили тест!",
         "score_label": "Ваш итоговый балл",
         "level_label": "Ваш определенный уровень языка",
-        "restart": "Чтобы пройти тест заново, нажмите пуск",
-        "session_expired": "Сессия истекла. Пожалуйста, начните заново"
+        "restart": "Чтобы пройти тест заново, нажмите /start",
+        "session_expired": "Сессия истекла. Начните заново с /start"
     },
     "zh": {
         "welcome": "欢迎来到阿拉伯语水平测试平台。\n请选择界面和说明语言：",
         "start_btn": "开始测试",
+        "audio_intro": "🎧 您已到达听力部分。请先听音频文件，然后点击下方按钮回答：",
+        "answer_btn": "回答问题",
         "question_title": "问题",
         "finished": "您已成功完成测试！",
         "score_label": "您的最终得分",
         "level_label": "您确定的语言水平",
-        "restart": "要重新测试，请重新开始",
-        "session_expired": "会话已过期，请重新开始"
+        "restart": "要重新测试，请按 /start",
+        "session_expired": "会话已过期，请使用 /start 重新开始"
     },
     "ja": {
         "welcome": "アラビア語レベルテストプラットフォームへようこそ。\nインターフェースと説明の言語を選択してください：",
         "start_btn": "テストを開始",
+        "audio_intro": "🎧 リスニングセクションに到達しました。音声ファイルを聞いてから、下のボタンを押して回答してください：",
+        "answer_btn": "質問に答える",
         "question_title": "質問",
         "finished": "テストが正常に終了しました！",
         "score_label": "最終スコア",
         "level_label": "判定された言語レベル",
-        "restart": "もう一度テストを受けるには、開始を押してください",
-        "session_expired": "セッションの有効期限が切れました。もう一度始めてください"
+        "restart": "もう一度テストを受けるには /start を押してください",
+        "session_expired": "セッションの有効期限が切れました。/start から始めてください"
     }
 }
 
@@ -151,7 +169,7 @@ TEST_MODELS = [
                 "correct": "ج"
             },
             {
-                "q": "9. (استماع) بعد الاستماع للملف الصوتي أدناه، ما هي الفكرة الرئيسية التي ركز عليها النص؟",
+                "q": "9. (استماع) بعد الاستماع للملف الصوتي، ما هي الفكرة الرئيسية التي ركز عليها النص؟",
                 "options": ["أ) صعوبة تعلم قواعد اللغة العربية", "ب) أهمية تعلم لغات جديدة وأهمية العربية وضرورة الاستماع للطلاقة", "ج) تاريخ القرآن الكريم وتفسير آياته", "د) طرق السفر والسياحة حول العالم"],
                 "correct": "ب"
             }
@@ -202,7 +220,7 @@ TEST_MODELS = [
                 "correct": "أ"
             },
             {
-                "q": "9. (استماع) بعد الاستماع للملف الصوتي أدناه، ما هي الفكرة الأساسية التي ركز عليها النص؟",
+                "q": "9. (استماع) بعد الاستماع للملف الصوتي، ما هي الفكرة الأساسية التي ركز عليها النص؟",
                 "options": ["أ) أهمية شراء جدول ورقي يومي", "ب) أهمية إدارة الوقت وتجنب التسويف وتنظيم المهام للإنتاج دون ضغط", "ج) طرق البحث العلمي الحديثة", "د) كيفية زيادة ساعات النوم"],
                 "correct": "ب"
             }
@@ -266,30 +284,37 @@ async def start_test_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     if user_id not in user_sessions:
         user_sessions[user_id] = {"lang": "en", "current_q_index": 0, "score": 0}
         
-    lang = user_sessions[user_id]["lang"]
-    
     selected_model = random.choice(TEST_MODELS)
     user_sessions[user_id]["model"] = selected_model
     user_sessions[user_id]["current_q_index"] = 0
     user_sessions[user_id]["score"] = 0
     
-    # البدء مباشرة بالسؤال الأول
-    await send_question_message(query.message, user_id, edit=False)
+    await send_current_step(query.message, user_id, edit=False, context=context)
 
-async def send_question_message(message, user_id, edit=False):
+async def send_current_step(message, user_id, edit=False, context=None):
     session = user_sessions[user_id]
     model = session["model"]
     index = session["current_q_index"]
     lang = session["lang"]
     texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
     
-    # إذا وصل الطالب للسؤال التاسع (الأخير)، نقوم بإرسال ملف الصوت الخاص بالاستماع أولاً
+    # إذا كان السؤال التاسع، نرسل الصوت في رسالة مستقلة أولاً مع زر للانتقال للخيارات
     if index == 8:
         audio_url = model["listening_audio_url"]
-        await message.chat.send_audio(audio=audio_url)
-    
+        if edit:
+            try:
+                await message.delete()
+            except Exception:
+                pass
+        
+        keyboard = [[InlineKeyboardButton(texts["answer_btn"], callback_data="show_audio_question")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await context.bot.send_audio(chat_id=user_id, audio=audio_url)
+        await context.bot.send_message(chat_id=user_id, text=texts["audio_intro"], reply_markup=reply_markup)
+        return
+
     q_data = model["questions"][index]
-    
     keyboard = []
     for option in q_data["options"]:
         opt_letter = option.split(")")[0].strip()
@@ -306,13 +331,40 @@ async def send_question_message(message, user_id, edit=False):
     else:
         await message.reply_text(text=text, reply_markup=reply_markup)
 
-async def answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def show_audio_question_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
     
     if user_id not in user_sessions:
         await query.message.reply_text("Session expired. Please start with /start")
+        return
+        
+    session = user_sessions[user_id]
+    model = session["model"]
+    index = session["current_q_index"]
+    lang = session["lang"]
+    texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
+    
+    q_data = model["questions"][index]
+    keyboard = []
+    for option in q_data["options"]:
+        opt_letter = option.split(")")[0].strip()
+        keyboard.append([InlineKeyboardButton(option, callback_data=f"ans_{opt_letter}")])
+        
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    text = f"{texts['question_title']} ({index + 1}/9):\n\n{q_data['q']}"
+    await query.message.edit_text(text=text, reply_markup=reply_markup)
+
+async def answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+    
+    if user_id not in user_sessions:
+        lang = "ar"
+        texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
+        await query.message.reply_text(texts["session_expired"])
         return
 
     selected_option = query.data.split("_")[1]
@@ -330,7 +382,7 @@ async def answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     session["current_q_index"] += 1
     
     if session["current_q_index"] < len(model["questions"]):
-        await send_question_message(query.message, user_id, edit=True)
+        await send_current_step(query.message, user_id, edit=True, context=context)
     else:
         final_score = min(round(session["score"]), 100)
         
@@ -354,6 +406,7 @@ async def answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 telegram_app.add_handler(CommandHandler("start", start_command))
 telegram_app.add_handler(CallbackQueryHandler(language_callback, pattern="^lang_"))
 telegram_app.add_handler(CallbackQueryHandler(start_test_callback, pattern="^start_test$"))
+telegram_app.add_handler(CallbackQueryHandler(show_audio_question_callback, pattern="^show_audio_question$"))
 telegram_app.add_handler(CallbackQueryHandler(answer_callback, pattern="^ans_"))
 
 @app.get("/")
