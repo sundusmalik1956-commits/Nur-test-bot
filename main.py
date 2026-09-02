@@ -1,414 +1,357 @@
+# -*- coding: utf-8 -*-
+"""
+بوت تيليجرام لاختبار تحديد مستوى اللغة العربية.
+يعمل عبر FastAPI + Webhooks + python-telegram-bot v20.x
+"""
+
+import logging
 import os
-import random
-from fastapi import FastAPI, Request
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from contextlib import asynccontextmanager
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")
+import httpx
+from fastapi import FastAPI, Request, Response
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Update,
+)
+from telegram.ext import (
+    Application,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+)
 
-app = FastAPI()
-telegram_app = Application.builder().token(TELEGRAM_BOT_TOKEN).updater(None).build()
+from questions_data import get_random_model, gdrive_direct_link
+from scoring import calculate_score, determine_level, get_level_label, TOTAL_QUESTIONS
+from translations import LANGUAGES, t
 
-user_sessions = {}
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
 
-UI_TEXTS = {
-    "ar": {
-        "welcome": "أهلاً بك في منصة اختبارات تحديد المستوى للغة العربية.\nالرجاء اختيار لغة الواجهة والتعليمات:",
-        "start_btn": "بدء الاختبار",
-        "audio_intro": "🎧 وصلْتَ إلى قسم الاستماع الأخير. استمع للملف الصوتي أولاً ثم اضغط على الزر أدناه للإجابة:",
-        "answer_btn": "الإجابة على السؤال",
-        "question_title": "سؤال",
-        "finished": "لقد أنهيت الاختبار بنجاح!",
-        "score_label": "درجتك النهائية",
-        "level_label": "مستواك اللغوي المحدد",
-        "restart": "لإعادة الاختبار من جديد، اضغط على امر البدء /start",
-        "session_expired": "انتهت الجلسة. الرجاء البدء مجدداً بـ /start"
-    },
-    "tr": {
-        "welcome": "Arapça seviye tespiti test platformuna hoş geldiniz.\nLütfen arayüz ve talimat dilini seçin:",
-        "start_btn": "Testi Başlat",
-        "audio_intro": "🎧 Dinleme bölümüne geldiniz. Önce ses dosyasını dinleyin, ardından soruyu yanıtlamak için aşağıdaki düğmeye tıklayın:",
-        "answer_btn": "Soruyu Cevapla",
-        "question_title": "Soru",
-        "finished": "Testi başarıyla tamamladınız!",
-        "score_label": "Final puanınız",
-        "level_label": "Belirlenen dil seviyeniz",
-        "restart": "Testi yeniden başlatmak için /start komutunu kullanın",
-        "session_expired": "Oturum süresi doldu. Lütfen /start ile tekrar başlayın"
-    },
-    "en": {
-        "welcome": "Welcome to the Arabic language placement test platform.\nPlease choose the interface and instructions language:",
-        "start_btn": "Start Test",
-        "audio_intro": "🎧 You have reached the listening section. Listen to the audio file first, then click the button below to answer:",
-        "answer_btn": "Answer Question",
-        "question_title": "Question",
-        "finished": "You have successfully finished the test!",
-        "score_label": "Your final score",
-        "level_label": "Your determined language level",
-        "restart": "To retake the test, press /start",
-        "session_expired": "Session expired. Please start with /start"
-    },
-    "fr": {
-        "welcome": "Bienvenue sur la plateforme de test de niveau de langue arabe.\nVeuillez choisir la langue de l'interface et des instructions:",
-        "start_btn": "Commencer le test",
-        "audio_intro": "🎧 Vous êtes arrivé à la section d'écoute. Écoutez le fichier audio puis cliquez ci-dessous pour répondre :",
-        "answer_btn": "Répondre à la question",
-        "question_title": "Question",
-        "finished": "Vous avez terminé le test avec succès!",
-        "score_label": "Votre score final",
-        "level_label": "Votre niveau de langue déterminé",
-        "restart": "Pour refaire le test, appuyez sur /start",
-        "session_expired": "Session expirée. Veuillez recommencer avec /start"
-    },
-    "de": {
-        "welcome": "Willkommen auf der Einstufungstest-Plattform für die arabische Sprache.\nBitte wählen Sie die Sprach- und Anweisungssprache:",
-        "start_btn": "Test starten",
-        "audio_intro": "🎧 Sie haben den Hörbereich erreicht. Hören Sie sich zuerst die Audiodatei an und klicken Sie unten, um zu antworten:",
-        "answer_btn": "Frage beantworten",
-        "question_title": "Frage",
-        "finished": "Sie haben den Test erfolgreich beendet!",
-        "score_label": "Ihre Endpunktzahl",
-        "level_label": "Ihr ermitteltes Sprachniveau",
-        "restart": "Um den Test zu wiederholen, tippen Sie auf /start",
-        "session_expired": "Sitzung abgelaufen. Bitte starten Sie mit /start"
-    },
-    "es": {
-        "welcome": "Bienvenido a la plataforma de prueba de nivel de idioma árabe.\nPor favor, elija el idioma de la interfaz y las instrucciones:",
-        "start_btn": "Comenzar prueba",
-        "audio_intro": "🎧 Has llegado a la sección de escucha. Escucha el archivo de audio y haz clic abajo para responder:",
-        "answer_btn": "Responder pregunta",
-        "question_title": "Pregunta",
-        "finished": "¡Has terminado la prueba con éxito!",
-        "score_label": "Tu puntuación final",
-        "level_label": "Tu nivel de idioma determinado",
-        "restart": "Para repetir la prueba, presiona /start",
-        "session_expired": "Sesión caducada. Por favor comienza con /start"
-    },
-    "ru": {
-        "welcome": "Добро пожаловать на платформу тестирования уровня арабского языка.\nПожалуйста, выберите язык интерфейса и инструкций:",
-        "start_btn": "Начать тест",
-        "audio_intro": "🎧 Вы перешли к разделу аудирования. Прослушайте аудиофайл и нажмите кнопку ниже, чтобы ответить:",
-        "answer_btn": "Ответить на вопрос",
-        "question_title": "Вопрос",
-        "finished": "Вы успешно завершили тест!",
-        "score_label": "Ваш итоговый балл",
-        "level_label": "Ваш определенный уровень языка",
-        "restart": "Чтобы пройти тест заново, нажмите /start",
-        "session_expired": "Сессия истекла. Начните заново с /start"
-    },
-    "zh": {
-        "welcome": "欢迎来到阿拉伯语水平测试平台。\n请选择界面和说明语言：",
-        "start_btn": "开始测试",
-        "audio_intro": "🎧 您已到达听力部分。请先听音频文件，然后点击下方按钮回答：",
-        "answer_btn": "回答问题",
-        "question_title": "问题",
-        "finished": "您已成功完成测试！",
-        "score_label": "您的最终得分",
-        "level_label": "您确定的语言水平",
-        "restart": "要重新测试，请按 /start",
-        "session_expired": "会话已过期，请使用 /start 重新开始"
-    },
-    "ja": {
-        "welcome": "アラビア語レベルテストプラットフォームへようこそ。\nインターフェースと説明の言語を選択してください：",
-        "start_btn": "テストを開始",
-        "audio_intro": "🎧 リスニングセクションに到達しました。音声ファイルを聞いてから、下のボタンを押して回答してください：",
-        "answer_btn": "質問に答える",
-        "question_title": "質問",
-        "finished": "テストが正常に終了しました！",
-        "score_label": "最終スコア",
-        "level_label": "判定された言語レベル",
-        "restart": "もう一度テストを受けるには /start を押してください",
-        "session_expired": "セッションの有効期限が切れました。/start から始めてください"
-    }
-}
+# ============================================================
+# إعدادات البيئة
+# ============================================================
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL", "")
+WEBHOOK_PATH = "/webhook"
 
-TEST_MODELS = [
-    {
-        "id": 1,
-        "listening_audio_url": "https://drive.google.com/uc?export=download&id=18Oz_4GuxbQZUUQueWHDOlvGeqKL29kR0",
-        "questions": [
-            {
-                "q": "1. ذهبتُ إلى _______ ليلاً لأشترى طعاماً وعصيراً.",
-                "options": ["أ) المكتبة", "ب) السوبرماركت", "ج) المدرسة", "د) المستشفى"],
-                "correct": "ب"
-            },
-            {
-                "q": "2. لم يُسافرْ محمدٌ إلى دبي، و_______ يُسافرْ خالدٌ.",
-                "options": ["أ) أيضاَ", "ب) كذلكَ", "ج) كذلكمْ", "د) لا"],
-                "correct": "ب"
-            },
-            {
-                "q": "3. المعلمُ _______ الشرحَ للطالبِ بوضوحٍ تامٍّ.",
-                "options": ["أ) يشرَحُ", "ب) شَرَحَ", "ج) شارِحٌ", "د) مَشروحاتٌ"],
-                "correct": "أ"
-            },
-            {
-                "q": "4. ما هو جمع كلمة (كتاب)؟",
-                "options": ["أ) كُتُبٌ", "ب) كِتاباتٌ", "ج) كاتِبونَ", "د) مَكتَباتٌ"],
-                "correct": "أ"
-            },
-            {
-                "q": "5. أيٌّ من الجمل الآتية صحيحة نحوياً وإملائياً؟",
-                "options": ["أ) جاءَ الطلابُ جميعاً.", "ب) رأيتُ الطلابَ جميعاً.", "ج) مررتُ بالطلابِ جميعاً.", "د) جميع ما ذكر صحيح."],
-                "correct": "د"
-            },
-            {
-                "q": "6. (قراءة) «يُعتبرُ التراثُ الثقافيُّ لأي أمة هو المرآة التي تعكس هويتها وتاريخها العريق...»\nماذا يُعتبر التراث الثقافي لأي أمة بحسب النص؟",
-                "options": ["أ) مصدراً للدخل المؤقت فقط", "ب) المرآة التي تعكس الهوية والتاريخ العريق", "ج) عائقاً أمام التطور العمراني", "د) مكاناً ترفيهياً خالياً من التاريخ"],
-                "correct": "ب"
-            },
-            {
-                "q": "7. (قراءة) كيف تنشط المدن التاريخية الاقتصاد المحلي؟",
-                "options": ["أ) عن طريق جذب السياح لمشاهدة المعالم القديمة", "ب) عن طريق بناء المصانع الحديثة", "ج) عن طريق إغلاقها أمام الزوار", "د) عن طريق فرض ضرائب عالية"],
-                "correct": "أ"
-            },
-            {
-                "q": "8. (قراءة) ما هو الشرط الأساسي الذي ذكره النص لحماية المواقع التاريخية؟",
-                "options": ["أ) منع السياح نهائياً", "ب) تحويلها لمبانٍ سكنية", "ج) الحفاظ عليها من التلوث والتلف", "د) إزالة المعالم القديمة"],
-                "correct": "ج"
-            },
-            {
-                "q": "9. (استماع) بعد الاستماع للملف الصوتي، ما هي الفكرة الرئيسية التي ركز عليها النص؟",
-                "options": ["أ) صعوبة تعلم قواعد اللغة العربية", "ب) أهمية تعلم لغات جديدة وأهمية العربية وضرورة الاستماع للطلاقة", "ج) تاريخ القرآن الكريم وتفسير آياته", "د) طرق السفر والسياحة حول العالم"],
-                "correct": "ب"
-            }
+if not TELEGRAM_BOT_TOKEN:
+    logger.warning("⚠️ لم يتم ضبط TELEGRAM_BOT_TOKEN في متغيرات البيئة!")
+
+# ============================================================
+# تخزين حالة المستخدمين في الذاكرة
+# ============================================================
+# user_data المدمجة مع Application تكفي، لكن نحتفظ بهيكل واضح هنا للرجوع إليه
+# state = {
+#   "lang": "ar",
+#   "model": {...},
+#   "current_q": 0,
+#   "correct_count": 0,
+# }
+
+# ============================================================
+# بناء تطبيق تيليجرام
+# ============================================================
+telegram_app: Application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+
+# ------------------------------------------------------------
+# أمر /start : عرض اختيار اللغة
+# ------------------------------------------------------------
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.clear()  # إعادة تعيين كاملة عند كل /start
+
+    buttons = []
+    row = []
+    for i, (code, label) in enumerate(LANGUAGES.items(), start=1):
+        row.append(InlineKeyboardButton(label, callback_data=f"lang:{code}"))
+        if i % 2 == 0:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
+
+    keyboard = InlineKeyboardMarkup(buttons)
+    # رسالة الاختيار تُعرض بالعربية والإنجليزية معاً كبداية محايدة
+    text = f"{t('choose_language', 'ar')}\n\n{t('choose_language', 'en')}"
+    await update.message.reply_text(text, reply_markup=keyboard)
+
+
+# ------------------------------------------------------------
+# اختيار اللغة
+# ------------------------------------------------------------
+async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    lang_code = query.data.split(":")[1]
+    context.user_data["lang"] = lang_code
+
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(t("start_test_button", lang_code), callback_data="begin_test")]]
+    )
+    await query.edit_message_text(
+        t("welcome_instructions", lang_code),
+        reply_markup=keyboard,
+    )
+
+
+# ------------------------------------------------------------
+# بدء الاختبار: اختيار نموذج عشوائي وعرض السؤال الأول
+# ------------------------------------------------------------
+async def begin_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    lang_code = context.user_data.get("lang", "en")
+    model = get_random_model()
+
+    context.user_data["model"] = model
+    context.user_data["current_q"] = 0
+    context.user_data["correct_count"] = 0
+
+    await send_question(update, context, edit=True)
+
+
+# ------------------------------------------------------------
+# إرسال سؤال بحسب الفهرس الحالي في user_data
+# ------------------------------------------------------------
+async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bool = False):
+    lang_code = context.user_data.get("lang", "en")
+    model = context.user_data["model"]
+    q_index = context.user_data["current_q"]
+    question = model["questions"][q_index]
+
+    chat_id = update.effective_chat.id
+
+    # سؤال الاستماع (التاسع) له سير عمل خاص
+    if question["type"] == "listening":
+        await send_listening_intro(update, context, question)
+        return
+
+    # بناء نص السؤال (مع نص القراءة إن وُجد)
+    progress = t("question_progress", lang_code, current=q_index + 1, total=TOTAL_QUESTIONS)
+    parts = [progress, ""]
+
+    if question["type"] == "reading":
+        parts.append(t("reading_passage_title", lang_code))
+        parts.append(f"\n「{question['passage']}」\n")
+
+    parts.append(question["text"])
+    text = "\n".join(parts)
+
+    # أزرار الخيارات (كل خيار بزر منفصل)
+    buttons = [
+        [InlineKeyboardButton(opt, callback_data=f"ans:{i}")]
+        for i, opt in enumerate(question["options"])
+    ]
+    keyboard = InlineKeyboardMarkup(buttons)
+
+    if edit and update.callback_query:
+        try:
+            await update.callback_query.edit_message_text(text, reply_markup=keyboard)
+            return
+        except Exception:
+            pass  # في حال فشل التعديل (مثلاً بعد إرسال صوت)، نرسل رسالة جديدة
+
+    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+
+
+# ------------------------------------------------------------
+# إرسال مقدمة سؤال الاستماع: الملف الصوتي + زر "الإجابة على السؤال"
+# ------------------------------------------------------------
+async def send_listening_intro(update: Update, context: ContextTypes.DEFAULT_TYPE, question: dict):
+    lang_code = context.user_data.get("lang", "en")
+    chat_id = update.effective_chat.id
+
+    audio_sent = False
+
+    # المحاولة الأولى (والأفضل): إرسال عبر file_id ثابت مرفوع مسبقاً على تيليجرام
+    file_id = question.get("audio_file_id")
+    if file_id:
+        try:
+            await context.bot.send_audio(chat_id=chat_id, audio=file_id)
+            audio_sent = True
+        except Exception as e:
+            logger.warning(f"فشل إرسال send_audio عبر file_id: {e}")
+
+    # محاولة احتياطية: رابط جوجل درايف المباشر (فقط إذا لم ينجح file_id)
+    if not audio_sent:
+        direct_link = gdrive_direct_link(question["audio_link"])
+        try:
+            await context.bot.send_audio(chat_id=chat_id, audio=direct_link)
+            audio_sent = True
+        except Exception as e:
+            logger.warning(f"فشل إرسال send_audio بالرابط المباشر: {e}")
+            try:
+                async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+                    resp = await client.get(direct_link)
+                    if resp.status_code == 200 and len(resp.content) > 1000:
+                        await context.bot.send_audio(
+                            chat_id=chat_id,
+                            audio=resp.content,
+                            filename="listening.mp3",
+                        )
+                        audio_sent = True
+            except Exception as e2:
+                logger.warning(f"فشل تحميل/إرسال الملف الصوتي يدوياً: {e2}")
+
+    if not audio_sent:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=t("audio_send_error", lang_code, link=question["audio_link"]),
+        )
+
+    # رسالة الإرشاد + زر الإجابة على السؤال
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(t("answer_question_button", lang_code), callback_data="show_listening_q")]]
+    )
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=t("listening_intro", lang_code),
+        reply_markup=keyboard,
+    )
+
+
+# ------------------------------------------------------------
+# عرض سؤال الاستماع نفسه بعد الضغط على "الإجابة على السؤال"
+# ------------------------------------------------------------
+async def show_listening_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    lang_code = context.user_data.get("lang", "en")
+    model = context.user_data["model"]
+    q_index = context.user_data["current_q"]
+    question = model["questions"][q_index]
+
+    progress = t("question_progress", lang_code, current=q_index + 1, total=TOTAL_QUESTIONS)
+    text = f"{progress}\n\n{question['text']}"
+
+    buttons = [
+        [InlineKeyboardButton(opt, callback_data=f"ans:{i}")]
+        for i, opt in enumerate(question["options"])
+    ]
+    keyboard = InlineKeyboardMarkup(buttons)
+
+    await query.edit_message_text(text, reply_markup=keyboard)
+
+
+# ------------------------------------------------------------
+# استقبال إجابة المستخدم على أي سؤال
+# ------------------------------------------------------------
+async def answer_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    lang_code = context.user_data.get("lang", "en")
+    model = context.user_data.get("model")
+    if model is None:
+        # المستخدم لم يبدأ اختباراً بعد (حالة غير متوقعة) - نطلب /start
+        await query.edit_message_text(t("choose_language", lang_code))
+        return
+
+    selected_index = int(query.data.split(":")[1])
+    q_index = context.user_data["current_q"]
+    question = model["questions"][q_index]
+
+    is_correct = selected_index == question["correct_index"]
+    if is_correct:
+        context.user_data["correct_count"] += 1
+
+    next_q_index = q_index + 1
+    context.user_data["current_q"] = next_q_index
+
+    if next_q_index >= len(model["questions"]):
+        # انتهى الاختبار: عرض النتيجة
+        await show_result(update, context)
+    else:
+        # الانتقال للسؤال التالي
+        await send_question(update, context, edit=True)
+
+
+# ------------------------------------------------------------
+# عرض النتيجة النهائية
+# ------------------------------------------------------------
+async def show_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lang_code = context.user_data.get("lang", "en")
+    correct_count = context.user_data.get("correct_count", 0)
+
+    score = calculate_score(correct_count, TOTAL_QUESTIONS)
+    level_code = determine_level(correct_count)
+    level_label = get_level_label(level_code, lang_code)
+
+    text = "\n\n".join(
+        [
+            t("result_title", lang_code),
+            t("result_score", lang_code, score=score, correct=correct_count, total=TOTAL_QUESTIONS),
+            t("result_level", lang_code, level=level_label),
+            t("restart_hint", lang_code),
         ]
-    },
-    {
-        "id": 2,
-        "listening_audio_url": "https://drive.google.com/uc?export=download&id=16DyfOmABWymeDgFSCn7ux6reDKKnpR2O",
-        "questions": [
-            {
-                "q": "1. سافر أخي إلى العاصمة _______ ليتعلم اللغة ويحصل على شهادة جامعية.",
-                "options": ["أ) القاهرة", "ب) الجري", "ج) الكرسي", "د) الطاولة"],
-                "correct": "أ"
-            },
-            {
-                "q": "2. لم يكنِ الطالبُ كسولاً، بل كانَ _______ في دراسته.",
-                "options": ["أ) مُجتهداً", "ب) مُجتهدٌ", "ج) مُجتهداًً", "د) مُجتهدٍ"],
-                "correct": "أ"
-            },
-            {
-                "q": "3. المعلمون _______ في إعداد المناهج الدراسية بعناية فائقة.",
-                "options": ["أ) مُشارِكونَ", "ب) مُشارِكينَ", "ج) مُشارِكاتٌ", "د) مُشارِكاً"],
-                "correct": "أ"
-            },
-            {
-                "q": "4. ما هو ضد كلمة (واسع) في اللغة العربية؟",
-                "options": ["أ) كبير", "ب) ضيق", "ج) طويل", "د) عميق"],
-                "correct": "ب"
-            },
-            {
-                "q": "5. أي من الكلمات الآتية تُعد ظرف مكان؟",
-                "options": ["أ) أمس", "ب) فوق", "ج) سريعاً", "د) صباحاً"],
-                "correct": "ب"
-            },
-            {
-                "q": "6. (قراءة) «تُعتبر البيئة النظيفة حقاً أساسياً من حقوق الإنسان، ومسؤوليةً جماعيةً...»\nعلى من تقع مسؤولية الحفاظ على البيئة النظيفة بحسب النص؟",
-                "options": ["أ) على الحكومات وحدها فقط", "ب) على الشركات الصناعية الكبرى", "ج) مسؤولية جماعية لا تقتصر على الحكومات وحدها", "د) على الأجيال القادمة فقط"],
-                "correct": "ج"
-            },
-            {
-                "q": "7. (قراءة) اذكر إحدى الخطوات الجوهرية التي ذكرها النص لبناء مستقبل مستدام:",
-                "options": ["أ) زيادة استخدام البلاستيك", "ب) انتشار الأساليب الخضراء وإعادة التدوير", "ج) إيقاف وسائل النقل العامة", "د) بناء مصانع تقليدية"],
-                "correct": "ب"
-            },
-            {
-                "q": "8. (قراءة) ما هو الهدف الرئيسي من تقليل استخدام البلاستيك وحماية البيئة؟",
-                "options": ["أ) بناء مستقبل مستدام وحماية كوكب الأرض من التغيرات المناخية", "ب) توفير الأموال للحكومات فقط", "ج) تقليل سرعة الرياح", "د) زيادة درجات الحرارة"],
-                "correct": "أ"
-            },
-            {
-                "q": "9. (استماع) بعد الاستماع للملف الصوتي، ما هي الفكرة الأساسية التي ركز عليها النص؟",
-                "options": ["أ) أهمية شراء جدول ورقي يومي", "ب) أهمية إدارة الوقت وتجنب التسويف وتنظيم المهام للإنتاج دون ضغط", "ج) طرق البحث العلمي الحديثة", "د) كيفية زيادة ساعات النوم"],
-                "correct": "ب"
-            }
-        ]
-    }
-]
+    )
 
-@app.on_event("startup")
-async def startup_event():
+    try:
+        await update.callback_query.edit_message_text(text)
+    except Exception:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+
+
+# ============================================================
+# تسجيل المعالجات (Handlers)
+# ============================================================
+telegram_app.add_handler(CommandHandler("start", start_command))
+telegram_app.add_handler(CallbackQueryHandler(language_selected, pattern=r"^lang:"))
+telegram_app.add_handler(CallbackQueryHandler(begin_test, pattern=r"^begin_test$"))
+telegram_app.add_handler(CallbackQueryHandler(show_listening_question, pattern=r"^show_listening_q$"))
+telegram_app.add_handler(CallbackQueryHandler(answer_selected, pattern=r"^ans:"))
+
+
+# ============================================================
+# تطبيق FastAPI + إدارة دورة الحياة (Webhook setup/teardown)
+# ============================================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await telegram_app.initialize()
-    if RENDER_EXTERNAL_URL:
-        webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
-        await telegram_app.bot.set_webhook(url=webhook_url)
+    await telegram_app.start()
 
-@app.post("/webhook")
+    if RENDER_EXTERNAL_URL:
+        webhook_url = f"{RENDER_EXTERNAL_URL.rstrip('/')}{WEBHOOK_PATH}"
+        try:
+            await telegram_app.bot.set_webhook(url=webhook_url)
+            logger.info(f"✅ تم ضبط الـ Webhook على: {webhook_url}")
+        except Exception as e:
+            logger.error(f"❌ فشل ضبط الـ Webhook: {e}")
+    else:
+        logger.warning("⚠️ RENDER_EXTERNAL_URL غير مضبوط، لم يتم تفعيل الـ Webhook تلقائياً.")
+
+    yield
+
+    await telegram_app.stop()
+    await telegram_app.shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "Arabic Level Test Bot is running."}
+
+
+@app.post(WEBHOOK_PATH)
 async def telegram_webhook(request: Request):
     data = await request.json()
     update = Update.de_json(data, telegram_app.bot)
     await telegram_app.process_update(update)
-    return {"status": "ok"}
+    return Response(status_code=200)
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("العربية (Arabic)", callback_data="lang_ar"), InlineKeyboardButton("Türkçe (Turkish)", callback_data="lang_tr")],
-        [InlineKeyboardButton("English", callback_data="lang_en"), InlineKeyboardButton("Français (French)", callback_data="lang_fr")],
-        [InlineKeyboardButton("Deutsch (German)", callback_data="lang_de"), InlineKeyboardButton("Español (Spanish)", callback_data="lang_es")],
-        [InlineKeyboardButton("Русский (Russian)", callback_data="lang_ru"), InlineKeyboardButton("中文 (Chinese)", callback_data="lang_zh")],
-        [InlineKeyboardButton("日本語 (Japanese)", callback_data="lang_ja")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        "اختر لغة الواجهة والتعليمات المفضلة لديك:\n"
-        "Please choose your preferred interface language:\n"
-        "Lütfen tercih ettiğiniz arayüz dilini seçin:",
-        reply_markup=reply_markup
-    )
 
-async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = query.from_user.id
-    lang = query.data.split("_")[1]
-    
-    user_sessions[user_id] = {
-        "lang": lang,
-        "current_q_index": 0,
-        "score": 0
-    }
-    
-    texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
-    keyboard = [[InlineKeyboardButton(texts["start_btn"], callback_data="start_test")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    await query.message.edit_text(text=texts["welcome"], reply_markup=reply_markup)
+if __name__ == "__main__":
+    import uvicorn
 
-async def start_test_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = query.from_user.id
-    
-    if user_id not in user_sessions:
-        user_sessions[user_id] = {"lang": "en", "current_q_index": 0, "score": 0}
-        
-    selected_model = random.choice(TEST_MODELS)
-    user_sessions[user_id]["model"] = selected_model
-    user_sessions[user_id]["current_q_index"] = 0
-    user_sessions[user_id]["score"] = 0
-    
-    await send_current_step(query.message, user_id, edit=False, context=context)
-
-async def send_current_step(message, user_id, edit=False, context=None):
-    session = user_sessions[user_id]
-    model = session["model"]
-    index = session["current_q_index"]
-    lang = session["lang"]
-    texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
-    
-    # إذا كان السؤال التاسع، نرسل الصوت في رسالة مستقلة أولاً مع زر للانتقال للخيارات
-    if index == 8:
-        audio_url = model["listening_audio_url"]
-        if edit:
-            try:
-                await message.delete()
-            except Exception:
-                pass
-        
-        keyboard = [[InlineKeyboardButton(texts["answer_btn"], callback_data="show_audio_question")]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        
-        await context.bot.send_audio(chat_id=user_id, audio=audio_url)
-        await context.bot.send_message(chat_id=user_id, text=texts["audio_intro"], reply_markup=reply_markup)
-        return
-
-    q_data = model["questions"][index]
-    keyboard = []
-    for option in q_data["options"]:
-        opt_letter = option.split(")")[0].strip()
-        keyboard.append([InlineKeyboardButton(option, callback_data=f"ans_{opt_letter}")])
-    
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    text = f"{texts['question_title']} ({index + 1}/9):\n\n{q_data['q']}"
-    
-    if edit:
-        try:
-            await message.edit_text(text=text, reply_markup=reply_markup)
-        except Exception:
-            await message.reply_text(text=text, reply_markup=reply_markup)
-    else:
-        await message.reply_text(text=text, reply_markup=reply_markup)
-
-async def show_audio_question_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = query.from_user.id
-    
-    if user_id not in user_sessions:
-        await query.message.reply_text("Session expired. Please start with /start")
-        return
-        
-    session = user_sessions[user_id]
-    model = session["model"]
-    index = session["current_q_index"]
-    lang = session["lang"]
-    texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
-    
-    q_data = model["questions"][index]
-    keyboard = []
-    for option in q_data["options"]:
-        opt_letter = option.split(")")[0].strip()
-        keyboard.append([InlineKeyboardButton(option, callback_data=f"ans_{opt_letter}")])
-        
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    text = f"{texts['question_title']} ({index + 1}/9):\n\n{q_data['q']}"
-    await query.message.edit_text(text=text, reply_markup=reply_markup)
-
-async def answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user_id = query.from_user.id
-    
-    if user_id not in user_sessions:
-        lang = "ar"
-        texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
-        await query.message.reply_text(texts["session_expired"])
-        return
-
-    selected_option = query.data.split("_")[1]
-    session = user_sessions[user_id]
-    model = session["model"]
-    index = session["current_q_index"]
-    lang = session["lang"]
-    texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
-    
-    correct_option = model["questions"][index]["correct"]
-    
-    if selected_option == correct_option:
-        session["score"] += 11.1
-    
-    session["current_q_index"] += 1
-    
-    if session["current_q_index"] < len(model["questions"]):
-        await send_current_step(query.message, user_id, edit=True, context=context)
-    else:
-        final_score = min(round(session["score"]), 100)
-        
-        if final_score <= 44:
-            level = "A1"
-        elif final_score <= 65:
-            level = "A2"
-        elif final_score <= 85:
-            level = "B1"
-        else:
-            level = "B2"
-            
-        await query.message.edit_text(
-            f"{texts['finished']}\n\n"
-            f"{texts['score_label']}: {final_score} / 100\n"
-            f"{texts['level_label']}: {level}\n\n"
-            f"{texts['restart']}"
-        )
-        user_sessions.pop(user_id, None)
-
-telegram_app.add_handler(CommandHandler("start", start_command))
-telegram_app.add_handler(CallbackQueryHandler(language_callback, pattern="^lang_"))
-telegram_app.add_handler(CallbackQueryHandler(start_test_callback, pattern="^start_test$"))
-telegram_app.add_handler(CallbackQueryHandler(show_audio_question_callback, pattern="^show_audio_question$"))
-telegram_app.add_handler(CallbackQueryHandler(answer_callback, pattern="^ans_"))
-
-@app.get("/")
-def home():
-    return {"status": "Arabic Level Assessment Bot is running smoothly!"}
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
