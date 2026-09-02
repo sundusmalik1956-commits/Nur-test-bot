@@ -12,23 +12,20 @@ telegram_app = Application.builder().token(TELEGRAM_BOT_TOKEN).updater(None).bui
 
 user_sessions = {}
 
-# قاموس شامل لجميع لغات العالم الرئيسية ولغات الواجهة
 UI_TEXTS = {
     "ar": {
         "welcome": "أهلاً بك في منصة اختبارات تحديد المستوى للغة العربية.\nالرجاء اختيار لغة الواجهة والتعليمات:",
         "start_btn": "بدء الاختبار",
-        "audio_msg": "استمع إلى الملف الصوتي الخاص بالاختبار:",
         "question_title": "سؤال",
         "finished": "لقد أنهيت الاختبار بنجاح!",
         "score_label": "درجتك النهائية",
         "level_label": "مستواك اللغوي المحدد",
         "restart": "لإعادة الاختبار من جديد، اضغط على امر البدء",
-        "session_expired": "انتهت الجلسة أو حدث تحديث. الرجاء البدء مجدداً"
+        "session_expired": "انتهت الجلسة. الرجاء البدء مجدداً"
     },
     "tr": {
         "welcome": "Arapça seviye tespiti test platformuna hoş geldiniz.\nLütfen arayüz ve talimat dilini seçin:",
         "start_btn": "Testi Başlat",
-        "audio_msg": "Test için ses dosyasını dinleyin:",
         "question_title": "Soru",
         "finished": "Testi başarıyla tamamladınız!",
         "score_label": "Final puanınız",
@@ -39,18 +36,16 @@ UI_TEXTS = {
     "en": {
         "welcome": "Welcome to the Arabic language placement test platform.\nPlease choose the interface and instructions language:",
         "start_btn": "Start Test",
-        "audio_msg": "Listen to the test audio file:",
         "question_title": "Question",
         "finished": "You have successfully finished the test!",
         "score_label": "Your final score",
         "level_label": "Your determined language level",
         "restart": "To retake the test, press start",
-        "session_expired": "Session expired or updated. Please start again"
+        "session_expired": "Session expired. Please start again"
     },
     "fr": {
         "welcome": "Bienvenue sur la plateforme de test de niveau de langue arabe.\nVeuillez choisir la langue de l'interface et des instructions:",
         "start_btn": "Commencer le test",
-        "audio_msg": "Écoutez le fichier audio du test:",
         "question_title": "Question",
         "finished": "Vous avez terminé le test avec succès!",
         "score_label": "Votre score final",
@@ -61,7 +56,6 @@ UI_TEXTS = {
     "de": {
         "welcome": "Willkommen auf der Einstufungstest-Plattform für die arabische Sprache.\nBitte wählen Sie die Sprach- und Anweisungssprache:",
         "start_btn": "Test starten",
-        "audio_msg": "Hören Sie sich die Test-Audiodatei an:",
         "question_title": "Frage",
         "finished": "Sie haben den Test erfolgreich beendet!",
         "score_label": "Ihre Endpunktzahl",
@@ -72,7 +66,6 @@ UI_TEXTS = {
     "es": {
         "welcome": "Bienvenido a la plataforma de prueba de nivel de idioma árabe.\nPor favor, elija el idioma de la interfaz y las instrucciones:",
         "start_btn": "Comenzar prueba",
-        "audio_msg": "Escuche el archivo de audio de la prueba:",
         "question_title": "Pregunta",
         "finished": "¡Has terminado la prueba con éxito!",
         "score_label": "Tu puntuación final",
@@ -83,7 +76,6 @@ UI_TEXTS = {
     "ru": {
         "welcome": "Добро пожаловать на платформу тестирования уровня арабского языка.\nПожалуйста, выберите язык интерфейса и инструкций:",
         "start_btn": "Начать тест",
-        "audio_msg": "Прослушайте аудио файл теста:",
         "question_title": "Вопрос",
         "finished": "Вы успешно завершили тест!",
         "score_label": "Ваш итоговый балл",
@@ -94,7 +86,6 @@ UI_TEXTS = {
     "zh": {
         "welcome": "欢迎来到阿拉伯语水平测试平台。\n请选择界面和说明语言：",
         "start_btn": "开始测试",
-        "audio_msg": "请听测试音频文件：",
         "question_title": "问题",
         "finished": "您已成功完成测试！",
         "score_label": "您的最终得分",
@@ -105,7 +96,6 @@ UI_TEXTS = {
     "ja": {
         "welcome": "アラビア語レベルテストプラットフォームへようこそ。\nインターフェースと説明の言語を選択してください：",
         "start_btn": "テストを開始",
-        "audio_msg": "テストの音声ファイルを聞いてください：",
         "question_title": "質問",
         "finished": "テストが正常に終了しました！",
         "score_label": "最終スコア",
@@ -161,7 +151,7 @@ TEST_MODELS = [
                 "correct": "ج"
             },
             {
-                "q": "9. (استماع) بعد الاستماع للملف الصوتي أعلاه، ما هي الفكرة الرئيسية التي ركز عليها النص؟",
+                "q": "9. (استماع) بعد الاستماع للملف الصوتي أدناه، ما هي الفكرة الرئيسية التي ركز عليها النص؟",
                 "options": ["أ) صعوبة تعلم قواعد اللغة العربية", "ب) أهمية تعلم لغات جديدة وأهمية العربية وضرورة الاستماع للطلاقة", "ج) تاريخ القرآن الكريم وتفسير آياته", "د) طرق السفر والسياحة حول العالم"],
                 "correct": "ب"
             }
@@ -212,7 +202,7 @@ TEST_MODELS = [
                 "correct": "أ"
             },
             {
-                "q": "9. (استماع) بعد الاستماع للملف الصوتي أعلاه، ما هي الفكرة الأساسية التي ركز عليها النص؟",
+                "q": "9. (استماع) بعد الاستماع للملف الصوتي أدناه، ما هي الفكرة الأساسية التي ركز عليها النص؟",
                 "options": ["أ) أهمية شراء جدول ورقي يومي", "ب) أهمية إدارة الوقت وتجنب التسويف وتنظيم المهام للإنتاج دون ضغط", "ج) طرق البحث العلمي الحديثة", "د) كيفية زيادة ساعات النوم"],
                 "correct": "ب"
             }
@@ -235,7 +225,6 @@ async def telegram_webhook(request: Request):
     return {"status": "ok"}
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # ترتيب أزرار اللغات في صفوف ثنائية لتكون منظمة للمستخدم
     keyboard = [
         [InlineKeyboardButton("العربية (Arabic)", callback_data="lang_ar"), InlineKeyboardButton("Türkçe (Turkish)", callback_data="lang_tr")],
         [InlineKeyboardButton("English", callback_data="lang_en"), InlineKeyboardButton("Français (French)", callback_data="lang_fr")],
@@ -278,17 +267,13 @@ async def start_test_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         user_sessions[user_id] = {"lang": "en", "current_q_index": 0, "score": 0}
         
     lang = user_sessions[user_id]["lang"]
-    texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
     
     selected_model = random.choice(TEST_MODELS)
     user_sessions[user_id]["model"] = selected_model
     user_sessions[user_id]["current_q_index"] = 0
     user_sessions[user_id]["score"] = 0
     
-    audio_url = selected_model["listening_audio_url"]
-    await query.message.reply_text(texts["audio_msg"])
-    await context.bot.send_audio(chat_id=user_id, audio=audio_url)
-    
+    # البدء مباشرة بالسؤال الأول
     await send_question_message(query.message, user_id, edit=False)
 
 async def send_question_message(message, user_id, edit=False):
@@ -297,6 +282,11 @@ async def send_question_message(message, user_id, edit=False):
     index = session["current_q_index"]
     lang = session["lang"]
     texts = UI_TEXTS.get(lang, UI_TEXTS["en"])
+    
+    # إذا وصل الطالب للسؤال التاسع (الأخير)، نقوم بإرسال ملف الصوت الخاص بالاستماع أولاً
+    if index == 8:
+        audio_url = model["listening_audio_url"]
+        await message.chat.send_audio(audio=audio_url)
     
     q_data = model["questions"][index]
     
@@ -368,4 +358,4 @@ telegram_app.add_handler(CallbackQueryHandler(answer_callback, pattern="^ans_"))
 
 @app.get("/")
 def home():
-    return {"status": "Arabic Level Assessment Bot with Global Languages is running!"}
+    return {"status": "Arabic Level Assessment Bot is running smoothly!"}
