@@ -5,7 +5,8 @@
 import re
 import random
 import requests
-from config.settings import GEMINI_API_KEY
+from settings import GEMINI_API_KEY
+
 
 def evaluate_with_ai(text, question_type="writing"):
     """
