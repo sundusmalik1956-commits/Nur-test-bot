@@ -1746,4 +1746,5 @@ if __name__ == "__main__":
     print("🤖 البوت يعمل الآن مع Gemini API...")
     print(f"📝 التوكن: {TOKEN[:10]}...")
     print(f"🔑 مفتاح Gemini: {'موجود' if GEMINI_API_KEY and GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY_HERE' else 'غير موجود'}")
-    bot.infinity_polling()
+bot.remove_webhook ()
+bot.infinity_polling()
