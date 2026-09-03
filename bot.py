@@ -5,7 +5,8 @@
 import telebot
 import threading
 import time
-from config.settings import TOKEN, TEST_DURATION
+from telebot import types
+from settings import TOKEN, TEST_DURATION, GEMINI_API_KEY
 from handlers.user_session import user_data, UserSession
 from languages.translations import LANGUAGES, get_text
 from keyboards.buttons import create_language_keyboard, create_start_keyboard
@@ -139,6 +140,7 @@ if __name__ == "__main__":
     print(f"📝 التوكن: {TOKEN[:10]}...")
     print(f"🔑 مفتاح Gemini: {'موجود' if GEMINI_API_KEY and GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY_HERE' else 'غير موجود'}")
     try:
+        bot.remove_webhook()
         bot.infinity_polling()
     except Exception as e:
         print(f"❌ خطأ: {e}")
