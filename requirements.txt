@@ -1,4 +1,2 @@
-fastapi
-uvicorn
-python-telegram-bot
-httpx
+pyTelegramBotAPI==4.13.1
+requests==2.31.0
