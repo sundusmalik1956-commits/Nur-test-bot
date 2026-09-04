@@ -109,18 +109,20 @@ def start_section_3(user_id, bot):
     text_data = LISTENING_TEXTS[session.listening_text_index]
     bot.send_message(user_id, get_text(user_id, "listening_instruction"))
     
-    # محاولة جلب وإرسال الملف الصوتي بشكل دقيق
-    audio_id = text_data.get("id") or text_data.get("audio_id")
+    # جلب رابط أو معرف الملف الصوتي من قاموس بيانات الاستماع
+    audio_source = text_data.get("audio_url") or text_data.get("link") or text_data.get("id") or text_data.get("audio_id")
     
-    if audio_id:
+    if audio_source:
         try:
-            print(f"Trying to send audio with ID: {audio_id}")
-            bot.send_audio(user_id, audio_id)
+            print(f"Trying to send audio source: {audio_source}")
+            # إرسال الملف الصوتي (سواء كان رابط مباشر من قوقل درايف أو file_id قديم)
+            bot.send_audio(user_id, audio_source)
         except Exception as e:
             print(f"❌ Error sending audio: {e}")
-            bot.send_message(user_id, "🎵 (تعذر إرسال الملف الصوتي، تأكد من صحة الـ file_id الخاص ببوتك)")
+            # إذا فشل الإرسال المباشر، يتم إرساله كنص كخيار بديل
+            bot.send_message(user_id, f"🎵 استمع إلى الملف الصوتي من الرابط التالي:\n{audio_source}")
     else:
-        print("⚠️ Warning: Audio ID is missing.")
+        print("⚠️ Warning: Audio source is missing.")
         bot.send_message(user_id, "🎵 (الملف الصوتي غير متوفر)")
     
     time.sleep(3)
