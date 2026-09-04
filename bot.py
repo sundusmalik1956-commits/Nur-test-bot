@@ -2,9 +2,11 @@
 # الملف الرئيسي لتشغيل البوت
 # =====================================================
 
-import telebot
+import os
 import threading
 import time
+from flask import Flask
+import telebot
 from telebot import types
 from settings import TOKEN, TEST_DURATION, GEMINI_API_KEY
 from handlers.user_session import user_data, UserSession
@@ -14,6 +16,15 @@ from handlers.sections import start_section_1, show_final_results
 from handlers.answers import handle_answer, handle_voice, handle_writing
 
 bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running successfully!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
 
 # =====================================================
 # أوامر البوت الرئيسية
@@ -132,10 +143,10 @@ def handle_other_files(message):
     bot.send_message(message.from_user.id, get_text(message.from_user.id, "error"))
 
 # =====================================================
-# تشغيل البوت
+# تشغيل البوت وخادم الفلاسك
 # =====================================================
 
-if __name__ == "__main__":
+def start_bot():
     print("🤖 البوت يعمل الآن مع Gemini API...")
     print(f"📝 التوكن: {TOKEN[:10]}...")
     print(f"🔑 مفتاح Gemini: {'موجود' if GEMINI_API_KEY and GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY_HERE' else 'غير موجود'}")
@@ -144,3 +155,12 @@ if __name__ == "__main__":
         bot.infinity_polling()
     except Exception as e:
         print(f"❌ خطأ: {e}")
+
+if __name__ == "__main__":
+    # تشغيل البوت في مسار منفصل (Background Thread)
+    bot_thread = threading.Thread(target=start_bot)
+    bot_thread.daemon = True
+    bot_thread.start()
+    
+    # تشغيل فلاسك في المسار الرئيسي لفتح البورت واستجابة راندر
+    run_flask()
