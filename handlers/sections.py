@@ -4,6 +4,8 @@
 
 import random
 import time
+import requests
+import io
 from handlers.user_session import user_data
 from languages.translations import get_text
 from data.questions_vocab import QUESTIONS_VOCAB_GRAMMAR
@@ -109,17 +111,25 @@ def start_section_3(user_id, bot):
     text_data = LISTENING_TEXTS[session.listening_text_index]
     bot.send_message(user_id, get_text(user_id, "listening_instruction"))
     
-    # جلب رابط أو معرف الملف الصوتي من قاموس بيانات الاستماع
     audio_source = text_data.get("audio_url") or text_data.get("link") or text_data.get("id") or text_data.get("audio_id")
     
     if audio_source:
         try:
             print(f"Trying to send audio source: {audio_source}")
-            # إرسال الملف الصوتي (سواء كان رابط مباشر من قوقل درايف أو file_id قديم)
-            bot.send_audio(user_id, audio_source)
+            if audio_source.startswith("http"):
+                # تحميل الملف من قوقل درايف وإرساله كملف صوتي مباشر
+                response = requests.get(audio_source, stream=True)
+                if response.status_code == 200:
+                    audio_file = io.BytesIO(response.content)
+                    audio_file.name = "listening_audio.mp3"
+                    bot.send_audio(user_id, audio_file)
+                else:
+                    bot.send_audio(user_id, audio_source)
+            else:
+                # إذا كان معرف تليجرام قديم
+                bot.send_audio(user_id, audio_source)
         except Exception as e:
             print(f"❌ Error sending audio: {e}")
-            # إذا فشل الإرسال المباشر، يتم إرساله كنص كخيار بديل
             bot.send_message(user_id, f"🎵 استمع إلى الملف الصوتي من الرابط التالي:\n{audio_source}")
     else:
         print("⚠️ Warning: Audio source is missing.")
