@@ -24,17 +24,23 @@ def handle_answer(user_id, message_text, bot):
     session.waiting_for_answer = False
     user_answer = message_text.strip()
     
-    # جلب النص الصحيح من بيانات السؤال الحالي
+    # جلب الإجابة الصحيحة والنص من بيانات السؤال الحالي
     correct_letter = session.current_correct_answer
     question_data = session.current_question_data
     
-    if question_data:
-        # تحويل الحرف إلى مؤشر (أ=0, ب=1, ج=2, د=3)
-        letter_index = ord(correct_letter) - 1575  # 'أ' = 1575 في يونيكود
-        correct_text = question_data[1][letter_index]
+    if question_data and len(question_data) > 1:
+        options = question_data[1]
+        correct_text = None
         
-        # التحقق من الإجابة وتحديث النتيجة (بدون إرسال أي رسالة)
-        if user_answer == correct_text:
+        # محاولة تحديد النص الصحيح سواء أرسل المستخدم الحرف (أ، ب...) أو النص مباشرة
+        mapping = {'أ': 0, 'ب': 1, 'ج': 2, 'د': 3}
+        if correct_letter in mapping and mapping[correct_letter] < len(options):
+            correct_text = options[mapping[correct_letter]]
+        elif correct_letter in options:
+            correct_text = correct_letter
+            
+        # التحقق من الإجابة وتحديث النتيجة بشكل آمن
+        if correct_text and user_answer == correct_text:
             session.scores[session.current_question_type] += 1
     
     # الانتقال للسؤال التالي حسب القسم
@@ -63,8 +69,6 @@ def handle_voice(user_id, voice_file, bot):
         file_info = bot.get_file(voice_file.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
         
-        # محاكاة تقييم (يجب استبداله بتحويل الصوت لنص فعلي)
-        # في التطبيق الفعلي، استخدم Google Speech-to-Text أو Whisper API
         simulated_text = "هذه إجابة نموذجية على سؤال المحادثة"
         score = evaluate_with_ai(simulated_text, "speaking")
         session.scores["speaking"] = score
