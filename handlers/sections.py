@@ -109,16 +109,19 @@ def start_section_3(user_id, bot):
     text_data = LISTENING_TEXTS[session.listening_text_index]
     bot.send_message(user_id, get_text(user_id, "listening_instruction"))
     
-    # معالجة آمنة لخطأ file_id لمنع توقف البوت في حال وجود خطأ بمعرّف الملف الصوتي
-    try:
-        audio_id = text_data.get("id")
-        if audio_id:
+    # محاولة جلب وإرسال الملف الصوتي بشكل دقيق
+    audio_id = text_data.get("id") or text_data.get("audio_id")
+    
+    if audio_id:
+        try:
+            print(f"Trying to send audio with ID: {audio_id}")
             bot.send_audio(user_id, audio_id)
-        else:
-            bot.send_message(user_id, "🎵 (عذراً، الملف الصوتي غير متاح، سننتقل للأسئلة مباشرة)")
-    except Exception as e:
-        print(f"⚠️ Warning: Failed to send audio file: {e}")
-        bot.send_message(user_id, "🎵 (تعذر إرسال الملف الصوتي، سننتقل للأسئلة مباشرة)")
+        except Exception as e:
+            print(f"❌ Error sending audio: {e}")
+            bot.send_message(user_id, "🎵 (تعذر إرسال الملف الصوتي، تأكد من صحة الـ file_id الخاص ببوتك)")
+    else:
+        print("⚠️ Warning: Audio ID is missing.")
+        bot.send_message(user_id, "🎵 (الملف الصوتي غير متوفر)")
     
     time.sleep(3)
     ask_next_listening_question(user_id, bot)
